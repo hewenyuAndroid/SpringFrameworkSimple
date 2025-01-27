@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- 配置 spring bean 对象和依赖关系 -->
+    <bean name="userService" class="com.example.service.UserServiceImpl">
+        <!--
+            注入 userDao 对象，
+            name="userDao" 表示名为 userDao 的 spring bean
+            ref="userDao" 表示向 userService 对象中注入名为 userDao 的属性，即调用 serUserDao() 函数注入对象
+        -->
+        <property name="userDao" ref="userDao"/>
+    </bean>
+
+    <bean name="userDao" class="com.example.dao.UserDao"/>
+
+</beans>
