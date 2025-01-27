@@ -1,7 +1,7 @@
 package com.example;
 
 import com.example.service.IUserService;
-import com.example.service.UserServiceImpl;
+import com.example.service.impl.UserServiceImpl;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 

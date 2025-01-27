@@ -1,7 +1,7 @@
 package com.example;
 
 import com.example.dao.UserDao;
-import com.example.service.UserServiceImpl;
+import com.example.service.impl.UserServiceImpl;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 

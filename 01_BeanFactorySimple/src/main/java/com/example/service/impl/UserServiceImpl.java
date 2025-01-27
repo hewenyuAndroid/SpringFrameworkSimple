@@ -1,6 +1,7 @@
-package com.example.service;
+package com.example.service.impl;
 
 import com.example.dao.UserDao;
+import com.example.service.IUserService;
 
 public class UserServiceImpl implements IUserService {
 

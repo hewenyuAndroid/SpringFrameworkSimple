@@ -4,7 +4,7 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
     <!-- 配置 spring bean 对象和依赖关系 -->
-    <bean name="userService" class="com.example.service.UserServiceImpl">
+    <bean name="userService" class="com.example.service.impl.UserServiceImpl">
         <!--
             注入 userDao 对象，
             name="userDao" 表示名为 userDao 的 spring bean
