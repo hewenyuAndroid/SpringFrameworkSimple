@@ -13,6 +13,6 @@
         <property name="userDao" ref="userDao"/>
     </bean>
 
-    <bean name="userDao" class="com.example.dao.UserDao"/>
+    <bean name="userDao" class="com.example.dao.UserDao" init-method="postInit" destroy-method="preDestroy"/>
 
 </beans>

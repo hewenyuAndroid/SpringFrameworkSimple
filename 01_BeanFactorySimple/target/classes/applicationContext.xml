@@ -13,6 +13,69 @@
         <property name="userDao" ref="userDao"/>
     </bean>
 
-    <bean name="userDao" class="com.example.dao.UserDao"/>
+    <bean id="userDao" name="abc" class="com.example.dao.UserDao"/>
+
+    <!-- 无参构造方式创建 bean -->
+    <bean id="bookDao" class="com.example.dao.BookDao"/>
+
+    <!-- 有参构造方式创建 bean -->
+    <bean id="bookDaoWithName" class="com.example.dao.BookDao">
+        <!-- 配置构造函数中 name 参数 -->
+        <constructor-arg name="name" value="Thinking in java"/>
+    </bean>
+
+    <!-- 配置 BookDao bean 实例的获取方式，通过 静态工厂方法 调用无参构造方式，实例化 BookDao-->
+    <bean id="bookDaoWithStatic" class="com.example.factory.BookDaoFactoryBean" factory-method="getBookDaoWithStatic"/>
+
+    <!-- 配置 BookDao bean 实例的获取方式，通过 静态工厂方法 调用有参构造方式，实例化 BookDao-->
+    <bean id="bookDaoWithStaticName" class="com.example.factory.BookDaoFactoryBean" factory-method="getBookDaoWithStatic">
+        <constructor-arg name="name" value="Think in java"/>
+    </bean>
+
+    <!-- 配置工厂bean实例 -->
+    <bean id="bookDaoFactoryBean" class="com.example.factory.BookDaoFactoryBean"/>
+
+    <!-- 配置 BookDao bean 实例的获取方式，通过 非静态工厂方法 调用无参构造方式，实例化 BookBean -->
+    <bean id="bookDaoFactory" factory-bean="bookDaoFactoryBean" factory-method="getBookDao"/>
+
+    <!-- 配置 BookDao bean 实例的获取方式，通过 非静态工厂方法 调用有参构造方式，实例化 BookBean -->
+    <bean id="bookDaoFactoryWithName" factory-bean="bookDaoFactoryBean" factory-method="getBookDao">
+        <constructor-arg name="name" value="Java"/>
+    </bean>
+
+    <!-- 配置 spring FactoryBean 接口方式创建 bean 实例 -->
+    <bean id="bookDaoFactoryBeanImpl" class="com.example.factory.BookDaoFactoryBeanImpl"/>
+
+    <!-- 依赖注入 -->
+    <bean id="bookService" class="com.example.service.impl.BookService">
+        <!-- 注入 List<String> 类型数据 -->
+        <property name="bookNameList">
+            <list>
+                <value>Java</value>
+                <value>Kotlin</value>
+            </list>
+        </property>
+        <!-- 注入 List<BookDao> 类型数据 -->
+        <property name="bookDaoList">
+            <list>
+                <ref bean="bookDao"/>
+                <ref bean="bookDaoWithName"/>
+            </list>
+        </property>
+        <!-- 注入 Map<String, BookDao> 类型数据 -->
+        <property name="bookDaoMap">
+            <map>
+                <entry key="book1" value-ref="bookDao"/>
+                <entry key="book2" value-ref="bookDaoWithStatic"/>
+            </map>
+        </property>
+        <!-- 注入 Properties 类型数据 -->
+        <property name="bookDaoProperties">
+            <props>
+                <prop key="book1">value1</prop>
+                <prop key="book2">value2</prop>
+            </props>
+        </property>
+    </bean>
 
 </beans>
