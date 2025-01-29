@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="userDao" class="com.example.dao.UserDao" init-method="initializer">
+        <property name="name" value="aaa"/>
+    </bean>
+
+    <!-- 注册 Bean工厂后处理器 -->
+    <bean class="com.example.processor.MyBeanFactoryPostProcessor"/>
+    <bean class="com.example.processor.DynamicRegisterBeanFactoryPostProcessor"/>
+
+    <!-- 注册 Bean后处理器 -->
+    <bean class="com.example.processor.MyBeanPostProcessor"/>
+
+</beans>
