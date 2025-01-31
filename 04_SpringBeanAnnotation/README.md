@@ -108,3 +108,248 @@ public class UserService { }
 @Controller("userController")
 public class UserController { }
 ```
+
+## Spring Bean 依赖注入开发
+
+Spring Bean 依赖注入的注解，主要是使用注解的方式替代 xml 的 `<property>` 标签完成属性的注入操作:
+
+```xml
+<bean id="" class="">
+    <property name="" value="" />
+    <property name="" ref="" />
+</bean>
+```
+
+Spring 主要提供如下注解，用于在 Bean 内部进行注入
+
+| 属性注入注解       | 描述                                 |
+|--------------|------------------------------------|
+| `@Value`     | 使用在字段或方法上，用于注入普通数据                 |
+| `@Autowired` | 使用在字段或方法上，用于根据类型 (`byType`) 注入引用数据 |
+| `@Qualifier` | 使用在字段或方法上，结合 `@Autowired` 根据名称注入   |
+| `@Resource`  | 使用在字段或方法上，根据类型或名称注入                |
+
+### 使用 `@Value` 注解
+
+#### 使用 `@Value` 注解注入基础数据类型
+
+```java
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class UserDao {
+    /**
+     * 使用 @Value 注解注入基础数据类型数据
+     */
+    @Value("zhangsan")
+    private String name;
+
+    private Integer age;
+
+    /**
+     * 使用 @Value 注解作用在函数上注入基础数据类型
+     */
+    @Value("20")
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        return "UserDao{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                '}';
+    }
+}
+```
+
+启动 spring 容器后获取 userDao bean 实例
+
+```java
+ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+UserDao userDao = (UserDao) context.getBean("userDao");
+System.out.println("ApplicationContextCaseTest: userDao = " + userDao);
+
+// 输出
+/*
+ApplicationContextCaseTest: userDao = UserDao{name='zhangsan', age=20}       
+*/
+```
+
+#### 使用 `@Value` 注入 `.properties` 属性文件中的属性
+
+> step1: 创建 `jdbc.properties` 属性文件
+
+```properties
+jdbc.username=root
+jdbc.password=root
+```
+> step2: 在 `applicationContext.xml` 文件中，注册属性文件
+
+```xml
+<!-- 注入 jdbc.properties 配置 -->
+<context:property-placeholder location="classpath:jdbc.properties"/>
+```
+
+> step3: 创建 bean 类，注入属性
+
+```java
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class JdbcProp {
+    /**
+     * 使用 "${}" 方式获 properties 文件中的值
+     */
+    @Value("${jdbc.username}")
+    private String username;
+
+    @Value("${jdbc.password}")
+    private String password;
+
+    @Override
+    public String toString() {
+        return "JdbcProp{" +
+                "username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                '}';
+    }
+}
+```
+
+> step4: 启动 spring 容器，获取 bean
+
+```java
+ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+JdbcProp jdbcProp = context.getBean(JdbcProp.class);
+System.out.println("ApplicationContextCaseTest: jdbcProp = " + jdbcProp);
+
+// 输出
+/*
+ApplicationContextCaseTest: jdbcProp = JdbcProp{username='root', password='root'}
+*/
+```
+
+### 使用 `@Autowired` 注解，根据类型注入
+
+> step1: 创建 `UserService` 类，持有 `UserDao` 实例
+
+```java
+import com.example.dao.UserDao;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserService {
+    // 使用在属性上直接注入
+    @Autowired
+    private UserDao userDao;
+    
+    // 使用在方法上
+    @Autowired
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
+    }
+
+    @Override
+    public String toString() {
+        return "UserService{" +
+                "userDao=" + userDao +
+                '}';
+    }
+}
+```
+
+> step2: 启动 spring 容器，获取实例
+
+```java
+ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+UserService userService = context.getBean(UserService.class);
+System.out.println("ApplicationContextCaseTest: userService = " + userService);
+
+// 输出
+/*
+ApplicationContextCaseTest: userService = UserService{userDao=UserDao{name='zhangsan', age=20}}
+*/
+```
+
+当容器中同一类型的 Bean 实例有多个时，会尝试自动根据名字进行匹配，如果匹配也不成功则会报错
+
+```java
+public interface IUserDao {}
+
+@Component
+public class UserDaoImpl implements IUserDao {}
+
+@Component
+public class UserDaoImpl2 implements IUserDao {}
+
+@Component
+public class UserService {
+    // 此时存在 多个 IUserDao 的实例，尝试使用字段名称 userDao 匹配
+    // 如果 spring 容器中，userDao 的实例也匹配不上，则会报错
+    @Autowired
+    private IUserDao userDao;
+    
+    // 配合 @Qualifier 注解, 指定当前注入的 bean 名称
+    @Autowired
+    @Qualifier("userDao2")
+    private IUserDao userDao2;
+}
+```
+
+### 使用 `@Resource` 注解
+
+`@Resource` 注解是 `javax.annotation` 包下的注解，它既可以根据类型注入，也可以根据名称注入，无参就是根据类型注入，有参数就是根据名称注入
+
+> step1: 使用 @Resource 注解注入属性
+
+```java
+package com.example.service;
+
+import com.example.dao.UserDao;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+
+@Service
+public class UserService {
+
+    @Autowired
+    private UserDao userDao;
+
+//    @Resource
+//    private UserDao userDao2;
+    
+    @Resource(name="userDao")
+    private UserDao userDao2;
+
+    @Override
+    public String toString() {
+        return "UserService{" +
+                "userDao=" + userDao +
+                "userDao2=" + userDao2 +
+                '}';
+    }
+}
+```
+
+> step2: 启动 spring 容器，获取bean
+
+```java
+ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+UserService userService = context.getBean(UserService.class);
+System.out.println("ApplicationContextCaseTest: userService = " + userService);
+
+// 输出
+/*
+ApplicationContextCaseTest: userService = UserService{userDao=UserDao{name='zhangsan', age=20}userDao2=UserDao{name='zhangsan', age=20}}
+*/
+```
+
+
+

@@ -1,5 +1,6 @@
 package com.example;
 
+import com.example.dao.JdbcProp;
 import com.example.dao.UserDao;
 import com.example.service.UserService;
 import org.springframework.context.ApplicationContext;
@@ -12,6 +13,9 @@ public class ApplicationContextCaseTest {
         ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
         UserDao userDao = (UserDao) context.getBean("userDao");
         System.out.println("ApplicationContextCaseTest: userDao = " + userDao);
+
+        JdbcProp jdbcProp = context.getBean(JdbcProp.class);
+        System.out.println("ApplicationContextCaseTest: jdbcProp = " + jdbcProp);
 
         UserService userService = context.getBean(UserService.class);
         System.out.println("ApplicationContextCaseTest: userService = " + userService);
