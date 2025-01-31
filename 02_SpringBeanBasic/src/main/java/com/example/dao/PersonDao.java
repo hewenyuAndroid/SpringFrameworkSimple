@@ -1,8 +1,9 @@
 package com.example.dao;
 
+import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.InitializingBean;
 
-public class PersonDao implements InitializingBean {
+public class PersonDao implements InitializingBean, BeanNameAware {
 
     public PersonDao() {
         System.out.println("PersonDao: constructor");
@@ -21,4 +22,10 @@ public class PersonDao implements InitializingBean {
         System.out.println("PersonDao: afterPropertiesSet()");
 
     }
+
+    @Override
+    public void setBeanName(String beanName) {
+        System.out.println("PersonDao: setBeanName(), name=" + beanName);
+    }
+
 }
