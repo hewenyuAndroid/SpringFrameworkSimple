@@ -294,3 +294,283 @@ MyBeanPostProcessor: postProcessAfterInitialization() bean=com.example.dao.UserD
 */
 ```
 
+spring bean工厂后处理器和bean后处理器处理时机完整流程如下所示
+
+![Bean工厂后处理器与Bean后处理器](./imgs/SpringFrameworkPostProcessor.png)
+
+
+
+# Spring Bean 的生命周期
+
+Spring Bean 的生命周期是从 Bean 实例化之后 ( 即通过反射创建出对象之后 )，到 Bean 成为一个完整对象，最终存储到单例池 ( `singletonObjects` ) 中，这个过程被称之为 Spring Bean 的生命周期。Spring Bean 的生命周期大体上分为三个阶段:
+
+1. Bean 的实例化阶段: Spring 框架取出 `BeanDefinition` 的信息判断当前 `Bean` 的范围是否是 `singleton` 的，是否是延迟加载的，是否是 FactoryBean 等，最终会将一个 `singleton` 的 Bean 通过反射进行实例化。
+2. Bean 的初始化阶段: Bean 创建之后还仅仅是个 "半成品"，spring 框架还需要对 Bean 实例的属性进行注入，执行一些 Aware 接口方法，执行 `BeanPostProcessor` 方法，执行 `InitializingBean` 接口的 初始化方法，执行自定义初始化init方法等。该阶段是 Spring 最具技术含量和复杂度的阶段。
+3. Bean 的完成阶段: 经过初始化阶段，Bean 就成为了一个完整的 Spring Bean，随后被存储到 单例池 ( `singletonObjects` ) 中，随即完成了 Spring Bean 的整个生命周期。
+
+
+## Spring Bean 的初始化阶段
+
+Spring Bean 的初始化过程涉及如下几个过程:
+
+- Bean 实例的属性填充;
+- Aware 接口属性注入;
+- BeanPostProcessor 的 before() 方法执行;
+- InitializingBean 接口的初始化方法回调;
+- 自定义初始化方法 init 回调;
+- BeanPostProcessor 的 after() 方法执行;
+
+```text
+// bean 生命周期日志
+
+// step1: 执行 Bean工厂后处理器
+DynamicRegisterBeanFactoryPostProcessor: postProcessBeanDefinitionRegistry()
+DynamicRegisterBeanFactoryPostProcessor: postProcessBeanFactory()
+MyBeanFactoryPostProcessor: postProcessBeanFactory()
+
+// step2: 开始 Bean 实例创建
+PersonDao: constructor
+// step3: 注入 bean 的属性
+PersonDao: setName(), name=zhangsan
+// step4: 执行 BeanPostProcessor#berore() 方法
+MyBeanPostProcessor: postProcessBeforeInitialization() bean=com.example.dao.PersonDao@7e9131d5
+// step5: 执行 InitializingBean 接口回调方法
+PersonDao: afterPropertiesSet()
+// step6: 执行自定义 init-method 方法回调
+PersonDao: init()
+// step7: 执行 BeanPostProcessor#after() 方法
+MyBeanPostProcessor: postProcessAfterInitialization() bean=com.example.dao.PersonDao@7e9131d5
+// step8: bean 实例存储到单例池 singletonObjects 中，done.
+```
+
+
+### Bean 实例属性填充
+
+Spring 在进行属性注入时有如下几种情况:
+
+- 注入普通属性, String, int 或 存储基本数据类型集合时，直接通过 set 方法的反射设置进去;
+- 注入单向对象引用属性时，从容器中 `getBean()` 获取 Bean 对象，然后通过 set 方法反射设置进去，如果容器中还未创建目标 bean 对象，则会先创建 被注入对象 bean 实例 ( 执行完被注入对象完整生命周期后 )，再进行注入操作;
+- 注入双向对象引用属性时，涉及了循环引用 ( 循环依赖 ) 问题;
+
+#### 注入单项对象引用属性案例
+
+> step1 定义 BookDao 和 BookService 类，BookService 持有 BookDao 对象
+
+// BookDao
+```java
+public class BookDao {
+    public BookDao() {
+        System.out.println("BookDao: constructor");
+    }
+}
+```
+
+// BookService
+```java
+public class BookService {
+
+    private BookDao bookDao;
+
+    public BookService() {
+        System.out.println("BookService: constructor");
+    }
+    
+    public void setBookDao(BookDao bookDao) {
+        this.bookDao = bookDao;
+        System.out.println("BookService: setBookDao() bookDao=" + bookDao);
+    }
+}
+```
+
+> step2 将 BookDao 和 BookService 配置到 Spring 框架
+
+Spring 框架按照顺序解析 xml 配置信息
+
+- bookDao 配置在 bookService 上方，此时 spring 向 bookService 注入 bookDao 属性时，getBean() 能够获取到 bookDao，直接注入即可;
+- bookService 配置 在 bookDao 上方，此时 spring 向 bookService 注入 bookDao 属性时，Spring 框架还未创建 bookDao 实例，此时 spring 框架会先创建 bookDao ( 执行完 bookDao 的完整生命周期 ) 实例，然后回过来向 bookService 注入 bookDao 实例; ( 主要分析过程 )
+
+```xml
+<!--
+    配置BookService
+    需要将 bookService 配置定义在 bookDao 之前，Spring 框架按照顺序解析配置
+    此时，bookService 注入 bookDao 属性时，bookDao 还未创建，用以验证单项引用依赖加载属性注入
+-->
+<bean id="bookService" class="com.example.service.BookService">
+    <property name="bookDao" value="bookDaoInject"/>
+</bean>
+<bean id="bookDaoInject" class="com.example.dao.BookDao"/>
+
+<!-- bookService 配置在 bookDao 之后 -->
+<!--<bean id="bookDaoInject" class="com.example.dao.BookDao"/>-->
+<!--<bean id="bookService" class="com.example.service.BookService">-->
+<!--    <property name="bookDao" value="bookDaoInject"/>-->
+<!--</bean>-->
+```
+
+> step3 启动 spring 容器
+
+```java
+new ClassPathXmlApplicationContext("applicationContext.xml");
+```
+
+- bookService 配置在 bookDao 之后，得到如下日志
+
+```text
+// step1: spring 容器构造 BookDao 实例
+BookDao: constructor
+// step2: spring 容器初始化 bookDao 实例
+MyBeanPostProcessor: postProcessBeforeInitialization() bean=com.example.dao.BookDao@152aa092
+MyBeanPostProcessor: postProcessAfterInitialization() bean=com.example.dao.BookDao@152aa092
+// step3: spring 容器构造 BookService 实例
+BookService: constructor
+// step4: 此时，由于容器已经初始化完成 bookDao 实例，此时直接 通过 getBean() 获取的 bookDao 向 bookService 注入
+BookService: setBookDao() bookDao=com.example.dao.BookDao@152aa092
+// step5: bookService 属性注入完成后，继续执行初始化操作
+MyBeanPostProcessor: postProcessBeforeInitialization() bean=com.example.service.BookService@37858383
+MyBeanPostProcessor: postProcessAfterInitialization() bean=com.example.service.BookService@37858383
+// step6: spring 容器启动完成，done.
+```
+
+- bookService 配置在 bookDao 之前，得到如下日志
+
+```text
+// step1: spring 容器构造 BookService 实例
+BookService: constructor
+// step2: spring 容器向 bookService 注入 bookDao 时，bookDao 还未创建，此时先创建 bookDao 实例
+BookDao: constructor
+// step3: bookDao 实例创建后，先进行 bookDao 实例的初始化流程，执行 bean后处理器，放入到 singletonObjects 单例池
+MyBeanPostProcessor: postProcessBeforeInitialization() bean=com.example.dao.BookDao@152aa092
+MyBeanPostProcessor: postProcessAfterInitialization() bean=com.example.dao.BookDao@152aa092
+// step4: bookDao 实例初始化完成后，再执行 bookService 的注入操作
+BookService: setBookDao() bookDao=com.example.dao.BookDao@152aa092
+// step5: bookService 属性注入完成后，继续执行初始化操作
+MyBeanPostProcessor: postProcessBeforeInitialization() bean=com.example.service.BookService@37858383
+MyBeanPostProcessor: postProcessAfterInitialization() bean=com.example.service.BookService@37858383
+// step6: spring 容器启动完成，done.
+```
+
+
+#### 注入双向对象引用属性案例 (循环依赖)
+
+多个实例之间相互依赖并形成闭环的情况称之为 循环依赖。
+
+> step1: 创建双向依赖的类
+
+// Student
+```java
+public class Student {
+    public Student() {
+        System.out.println("Student: Constructor");
+    }
+
+    // Student 依赖 Classroom 实例
+    public void setClassroom(Classroom classroom) {
+        System.out.println("Student: setClassroom(): classroom=" + classroom);
+    }
+}
+```
+
+// Classroom
+```java
+public class Classroom {
+    public Classroom() {
+        System.out.println("Classroom: constructor");
+    }
+
+    // Classroom 依赖 Student 实例
+    public void setStudent(Student student) {
+        System.out.println("Classroom: setStudent(), student=" + student);
+    }
+}
+```
+
+> step2: 向 Spring 中注册 Student 和 Classroom
+
+```xml
+<!-- 配置 Student 和 Classroom 信息，两个实例相互依赖 -->
+<bean id="student" class="com.example.domain.Student">
+    <property name="classroom" ref="classroom"/>
+</bean>
+<bean id="classroom" class="com.example.domain.Classroom">
+    <property name="student" ref="student"/>
+</bean>
+```
+
+> step3: 启动 spring 容器
+
+```java
+new ClassPathXmlApplicationContext("applicationContext.xml");
+```
+
+得到如下日志:
+
+```text
+// step1: spring 容器 创建 Student 实例
+Student: Constructor
+// step2: spring 容器 向 student 实例注入 classroom 实例时，发现还未创建 classroom 实例，因此先创建 classroom 实例
+Classroom: constructor
+// step3: classroom 创建完成后优先执行属性注入和初始化操作，这里向其内部注入 student 实例。
+// 注意，这里的 student 实例是刚创建还未初始化完成的，因此 该实例还未存储到 singletonObjects 单例池中
+Classroom: setStudent(), student=com.example.domain.Student@2beee7ff
+// step4: 执行 classroom 实例的初始化操作
+MyBeanPostProcessor: postProcessBeforeInitialization() bean=com.example.domain.Classroom@5136d012
+MyBeanPostProcessor: postProcessAfterInitialization() bean=com.example.domain.Classroom@5136d012
+// step5: classroom 实例初始化完成后，再回头执行 student 实例的属性注入和初始化操作
+Student: setClassroom(): classroom=com.example.domain.Classroom@5136d012
+MyBeanPostProcessor: postProcessBeforeInitialization() bean=com.example.domain.Student@2beee7ff
+MyBeanPostProcessor: postProcessAfterInitialization() bean=com.example.domain.Student@2beee7ff
+// step6: spring 容器启动完成，done.
+```
+
+#### spring 的三级缓存分析循环引用问题
+
+spring 提供了三级缓存来解决循环依赖问题，三级缓存分别用于存储 完整bean实例 和 半成品bean实例。
+
+- 完整bean实例: 创建完成的bean实例，且完成属性注入和初始化操作的 bean，此时 bean 存储在 `singletonObjects` 单例池中;
+- 半成品bean实例: 创建完成的bean实例，还未完成属性注入和初始化操作的 bean。
+
+spring 提供的三级换内存map定义 `DefaultListableBeanFactory` 的父类之上， `DefaultSingletonBeanRegistry` 类中
+
+![三级缓存类](./imgs/SpringBeanFactoryCacheClass.png)
+
+```java
+public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements SingletonBeanRegistry {
+    // 1. 一级缓存: 最终存储单例 Bean 实例 (完整实例) 的容器，即缓存实例化和初始化都完成的 bean 实例;
+    private final Map<String, Object> singletonObjects = new ConcurrentHashMap(256);
+    // 2. 二级缓存: 早期 Bean 单例池，缓存半成品实例，且 当前 bean 实例已经被其它对象引用了 ( 例如 userDao 被注入到 userService 实例中 );
+    private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap(16);
+    // 3. 三级缓存: 单例 Bean 的工厂池，缓存半成品实例，当前 bean 实例还未被引用
+    private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap(16);
+}
+```
+
+```java
+// 三级缓存存储的 value 对象
+package org.springframework.beans.factory;
+
+import org.springframework.beans.BeansException;
+
+@FunctionalInterface
+public interface ObjectFactory<T> {
+    T getObject() throws BeansException;
+}
+```
+
+> student 实例和 classroom 实例循环依赖过程结合三级缓存分析
+
+注意: 三级缓存的查找顺序为 先查找 一级缓存，没有命中目标再查找 二级缓存，没有命中目标最后查找三级缓存。任意一级缓存命中目标就会返回。
+
+1. `Student` 实例化对象，还未初始化，此时，`student` 实例存储到三级缓存 `singletonFactories` 缓存池中。
+2. `student` 注入 `classroom` 属性，spring 框架从缓存中获取 `classroom` 实例，此时 spring 缓存中还未创建 `classroom` 实例;
+3. `Classroom` 实例化对象，还未初始化，此时，`classroom` 实例存储到三级缓存 `singletonFactories` 缓存池中。// 当前缓存池中缓存了两个bean
+4. `classroom` 注入 `student` 属性，`student` 实例在三级缓存命中，被注入到 `classroom` 中，随后 `student` 实例从 三级缓存 移入到 二级缓存中 (三级缓存中的 `student` 会被删除)。
+5. `classroom` 完成属性注入，进而执行初始化操作，最终成为一个完整 bean，随后，随后 `classroom` 实例被存储到 一级缓存 中，二级三级缓存中的 `classroom` 实例将会被移除。
+6. `student` 继续执行注入 `classroom` 属性操作。
+7. `student` 继续完成其它实例注入，在初始化完成后，`student` 实例被缓存到 一级缓存 中，二级三级缓存中的 `student` 实例将会被移除; 
+
+
+
+
+
+
+

@@ -14,4 +14,27 @@
     <!-- 注册 Bean后处理器 -->
     <bean class="com.example.processor.MyBeanPostProcessor"/>
 
+    <bean id="personDao" class="com.example.dao.PersonDao" init-method="init">
+        <property name="name" value="zhangsan"/>
+    </bean>
+
+    <!--
+        配置BookService
+        需要将 bookService 配置定义在 bookDao 之前，Spring 框架按照顺序解析配置
+        此时，bookService 注入 bookDao 属性时，bookDao 还未创建，用以验证单项引用依赖加载属性注入
+    -->
+    <bean id="bookService" class="com.example.service.BookService">
+        <property name="bookDao" ref="bookDaoInject"/>
+    </bean>
+    <bean id="bookDaoInject" class="com.example.dao.BookDao"/>
+
+
+    <!-- 配置 Student 和 Classroom 信息，两个实例相互依赖 -->
+    <bean id="student" class="com.example.domain.Student">
+        <property name="classroom" ref="classroom"/>
+    </bean>
+    <bean id="classroom" class="com.example.domain.Classroom">
+        <property name="student" ref="student"/>
+    </bean>
+
 </beans>
