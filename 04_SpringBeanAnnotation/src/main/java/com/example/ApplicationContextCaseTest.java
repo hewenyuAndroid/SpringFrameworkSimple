@@ -17,8 +17,11 @@ public class ApplicationContextCaseTest {
         JdbcProp jdbcProp = context.getBean(JdbcProp.class);
         System.out.println("ApplicationContextCaseTest: jdbcProp = " + jdbcProp);
 
-        UserService userService = context.getBean(UserService.class);
+        UserService userService = context.getBean("userService", UserService.class);
         System.out.println("ApplicationContextCaseTest: userService = " + userService);
+
+        UserService thirdUserService = (UserService) context.getBean("thirdUserService");
+        System.out.println("ApplicationContextCaseTest: thirdUserService = " + thirdUserService);
 
     }
 
