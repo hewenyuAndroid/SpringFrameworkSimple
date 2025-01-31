@@ -301,6 +301,35 @@ public class UserService {
 }
 ```
 
+> 扩展
+
+1. 当 `@Autowired` 注解使用在方法上时，可以根据参数类型匹配 bean 实例;
+2. 当 `@Autowired` 注解使用在方法上时，方法参数是一个集合，则 spring 会返回当前容器中所有的该类型的实例;
+
+```java
+@Service
+public class UserService {
+    // @Autowired 注解使用在方法上时，可以根据参数类型匹配
+    @Autowired
+    public void xxx(UserDao userDao) {
+        System.out.println("UserService: xxx(), userDao=" + userDao);
+    }
+
+    // @Autowired 注解使用在方法上时，如果参数类型是集合，则会把所有该类型的bean返回
+    @Autowired
+    public void yyy(List<UserDao> userDaoList) {
+        System.out.println("UserService: yyy(), userDaoList=" + userDaoList);
+    }
+}
+```
+
+启动容器，得到如下输出:
+
+```text
+UserService: yyy(), userDaoList=[UserDao{name='zhangsan', age=20}]
+UserService: xxx(), userDao=UserDao{name='zhangsan', age=20}
+```
+
 ### 使用 `@Resource` 注解
 
 `@Resource` 注解是 `javax.annotation` 包下的注解，它既可以根据类型注入，也可以根据名称注入，无参就是根据类型注入，有参数就是根据名称注入

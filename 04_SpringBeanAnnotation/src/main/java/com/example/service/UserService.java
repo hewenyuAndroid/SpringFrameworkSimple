@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
+import java.util.List;
 
 @Service
 public class UserService {
@@ -36,6 +37,18 @@ public class UserService {
     @Autowired
     public void setUserDao(UserDao userDao) {
         this.userDao = userDao;
+    }
+
+    // @Autowired 注解使用在方法上时，可以根据参数类型匹配
+    @Autowired
+    public void xxx(UserDao userDao) {
+        System.out.println("UserService: xxx(), userDao=" + userDao);
+    }
+
+    // @Autowired 注解使用在方法上时，如果参数类型是集合，则会把所有该类型的bean返回
+    @Autowired
+    public void yyy(List<UserDao> userDaoList) {
+        System.out.println("UserService: yyy(), userDaoList=" + userDaoList);
     }
 
     @Override
