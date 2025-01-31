@@ -1,0 +1,21 @@
+package com.example;
+
+import com.example.dao.UserDao;
+import com.example.service.UserService;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class ApplicationContextCaseTest {
+
+    public static void main(String[] args) {
+
+        ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+        UserDao userDao = (UserDao) context.getBean("userDao");
+        System.out.println("ApplicationContextCaseTest: userDao = " + userDao);
+
+        UserService userService = context.getBean(UserService.class);
+        System.out.println("ApplicationContextCaseTest: userService = " + userService);
+
+    }
+
+}
