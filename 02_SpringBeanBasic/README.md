@@ -566,7 +566,10 @@ public interface ObjectFactory<T> {
 4. `classroom` 注入 `student` 属性，`student` 实例在三级缓存命中，被注入到 `classroom` 中，随后 `student` 实例从 三级缓存 移入到 二级缓存中 (三级缓存中的 `student` 会被删除)。
 5. `classroom` 完成属性注入，进而执行初始化操作，最终成为一个完整 bean，随后，随后 `classroom` 实例被存储到 一级缓存 中，二级三级缓存中的 `classroom` 实例将会被移除。
 6. `student` 继续执行注入 `classroom` 属性操作。
-7. `student` 继续完成其它实例注入，在初始化完成后，`student` 实例被缓存到 一级缓存 中，二级三级缓存中的 `student` 实例将会被移除; 
+7. `student` 继续完成其它实例注入，在初始化完成后，`student` 实例被缓存到 一级缓存 中，二级三级缓存中的 `student` 实例将会被移除;
+
+
+![Bean生命周期完整流程图](./imgs/SpringFrameworkBeanLifecycleFinal.png)
 
 
 
