@@ -435,3 +435,183 @@ System.out.println("ApplicationContextCaseTest: thirdUserService = " + thirdUser
 2. 使用 @Qualifier 根据名称匹配
 3. 使用 @Value 匹配普通数据
 
+
+### 其它注解扩展 `@Primary` `@Profile`
+
+#### `@Primary` 注解
+
+`@Primary` 注解用于标注相同类型 `Bean` 的优先使用权，`@Primary` 是 Spring 3.0 引入的，与 `@Component` 和 `@Bean` 一起使用，标注该 `Bean` 的优先级更高，在通过类型获取 Bean 或通过 `@Autowired` 根据类型自动注入时，会选择优先级更高的 Bean;
+
+```java
+@Component
+public class UserDaoImpl implements IUserDao {}
+
+// 使用 @Primary 注解标注的 bean 通过类型匹配时，优先返回
+@Component
+@Primary
+public class UserDaoImpl2 implements IUserDao {}
+
+public class UserService {
+    // 使用 @Autowired 注入时，由于 UserDaoImpl2 使用了 @Primary 注解，
+    // 因此当前的 userDao 实例为 UserDaoImpl2 类型
+    @Autowired
+    private IUserDao userDao;
+}
+
+// 使用类型获取 Bean 实例时，由于 UserDaoImpl2 使用了 @Primary 注解
+// 因此当前获取到的是 UserDaoImpl2 实例
+applicationContext.getBean(IUserDao.class);
+```
+
+配合 `@Bean` 注解使用
+
+```java
+@Component
+public class ThirdBean {
+    // 通过类型获取或者 @Autowired 注入时，优先返回 userDao1 实例
+    @Bean
+    @Primary
+    public IUserDao userDao1() {
+        return new UserDao();
+    }
+    
+    public IUserDao userDao2() {
+        return new UserDao();
+    }
+}
+```
+
+#### `@Profile` 注解
+
+`@Profile` 注解的作用同 xml 配置的 profile 属性，用于环境切换使用
+
+```xml
+<beans profile="test" />
+```
+
+`@Profile` 注解标注在类或方法上，标注当前产生的 Bean 从属哪个环境，只有激活了当前环境，被标注的 Bean 才能被注册到 Spring 容器中，未标注环境的 Bean 能够在任何环境中都被加载到 Spring 容器中。
+
+```java
+// 生产环境启动时加载
+@Component
+@Profile("prod")
+public class UserDaoImpl implements IUserDao {}
+
+// 测试环境启动时加载
+@Component
+@Profile("test")
+public class UserDaoImpl2 implements IUserDao {}
+```
+
+> 配置 spring 容器的环境
+
+- 使用命令行动态参数，虚拟机参数位置加载 `-Dspring.profiles.active=test` ;
+- 使用代码的方式设置环境变量 `System.setProperty("spring.profiles.active=test")` ;
+
+
+## 非 Bean 标签使用
+
+`@Component` 注解替代了 `<bean>` 标签，但是像 `<import>`、`<context:componentScan>` 等 非 `<bean>` 标签目前还是在 `applicationContext.xml` 配置文件中，例如:
+
+```xml
+<!-- 组件扫描 -->
+<context:component-scan base-package="com.example"/>
+<!-- 加载 jdbc.properties文件 -->
+<context:property-placeholder location="classpath:jdbc.properties"/>
+<!-- 引入其它 xml 文件 -->
+<import resource="classpath:beans.xml"/>
+```
+
+### `@Configuration` 注解
+
+`@Configuration` 注解标识的类为配置类，替代原有 xml 的配置文件，该注解第一个作用是标识该类是一个配置类，第二个作用是标识该类具有 `@Component` 作用
+
+```java
+@Configuration
+public class ApplicationContextConfig {}
+```
+
+> step1: 创建注解配置类
+
+```java
+@Configuration
+@ComponentScan("com.example")
+@PropertySource("classpath:jdbc.properties")
+public class SpringConfig { }
+```
+
+> step2: 使用注解相关的类启动 spring 容器
+
+```java
+//ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+// 使用注解配置 Spring 时，需要使用注解相关的配置类启动容器, 而不是原先的 ClassPathXmlApplicationContext
+ApplicationContext context = new AnnotationConfigApplicationContext(SpringConfig.class);
+UserDao userDao = (UserDao) context.getBean("userDao");
+System.out.println("AnnotationConfigCaseTest: userDao = " + userDao);
+```
+
+
+### `@ComponentScan` 注解
+
+`@ComponentScan` 组件扫描配置注解，替换原有 xml 文件中的 `<context:component-scan base-package="" />`
+
+`base-package` 的配置方式:
+
+- 指定一个或多个包名: 扫描指定包及其子包下使用注解的类;
+- 不配置包名: 扫描当前 `@ComonentScan` 注解配置类所在包及其子包下的类;
+
+```java
+// 扫描 ApplicationContextConfig 类所在包及其子包下的注解配置类
+@Configuration
+@ComponentScan
+public class ApplicationContextConfig {}
+
+// 扫描 com.example 包及其子包下的注解配置类
+@Configuration
+@ComponentScan("com.example")
+public class ApplicationContextConfig {}
+
+// 扫描 com.example.dao 和 com.example.service 包及其子包下的注解配置类
+@Configuration
+@ComponentScan({"com.example.dao", "com.example.service"})
+public class ApplicationContextConfig {}
+```
+
+### `@PropertySource` 注解
+
+`@PropertySource` 注解用于加载外部 `properties` 资源配置，替代原有的 `<context:property-placeholder location="" />` 配置
+
+```java
+// 配置 properties 文件加载
+@Configuration
+@ComponentScan
+//@PropertySource("classpath:jdbc.properties")
+@PropertySource({"classpath:jdbc.properties", "classpath:source.properties"})
+public class ApplicationContextConfig {}
+```
+
+### `@Import` 注解
+
+`@Imoprt` 注解用于加载其它配置类，替代原有 xml 的 `<import resource="classpath:beans.xml" />` 配置
+
+```java
+// 未将 OtherBean 交给 Spring 管理，此时spring框架不能扫描到 userBean 函数
+//@Component
+public class OtherBean {
+    @Bean
+    public UserBean userBean(){
+        return new UserBean();
+    }
+}
+```
+
+```java
+// 将 OtherBean 类通过 @Import 注解导入到配置中，容器启动后，可以正常获取到 UserBean 实例;
+@Configuration
+@ComponentScan
+@PropertySource("classpath:jdbc.properties")
+@Import(OtherBean.class)
+public class ApplicationContextConfig { }
+```
+
+
