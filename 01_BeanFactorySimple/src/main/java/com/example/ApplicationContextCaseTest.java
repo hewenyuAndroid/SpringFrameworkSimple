@@ -3,6 +3,7 @@ package com.example;
 import com.example.dao.BookDao;
 import com.example.service.IUserService;
 import com.example.service.impl.BookService;
+import com.example.service.impl.EmpService;
 import com.example.service.impl.UserServiceImpl;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -43,6 +44,8 @@ public class ApplicationContextCaseTest {
         BookService bookService = (BookService) applicationContext.getBean("bookService");
         System.out.println("ApplicationContextCaseTest: bookService=" + bookService);
 
+        EmpService empService = applicationContext.getBean(EmpService.class);
+        empService.save();
 
     }
 

@@ -78,4 +78,13 @@
         </property>
     </bean>
 
+    <bean id="empDao" class="com.example.dao.EmpDao"/>
+    <!--
+        配置 EmpService 自动装配，spring 会自动为其内部注入bean属性
+        byType: 根据类型匹配IOC容器中的某个兼容类型的 bean，为属性自动赋值
+        byName: 根据bean的名称进行主动装配，spring 容器会在容器中查找与目标bean属性名称相同的 bean，并将其注入到目标 bean 中。
+        constructor: 通过构造函数进行自动装配，spring 容器会根据构造函数的参数类型，在容器中查找匹配的 bean，将其作为构造函数的参数注入。
+    -->
+    <bean id="empService" class="com.example.service.impl.EmpService" autowire="byType"/>
+
 </beans>

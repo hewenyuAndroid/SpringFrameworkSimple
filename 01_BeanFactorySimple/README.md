@@ -302,6 +302,41 @@ public class UserDao {
 }
 ```
 
+## `<bean autowire="byType" />` 自动装配
+
+项目中的 Bean 数量较多且依赖关系复杂时，手动配置每个 Bean 的依赖关系会变得非常繁琐，通过自动装配可以减少配置文件的复杂工作。
+
+> step1: 创建两个 bean 类
+
+// EmpDao.java
+```java
+public class EmpDao {
+    public void save() {
+        System.out.println("EmpDao: save()");
+    }
+}
+```
+
+// EmpService.java
+```java
+public class EmpService {
+    private EmpDao empDao;
+
+    // 需要有 set 函数
+    public void setEmpDao(EmpDao empDao) {
+        this.empDao = empDao;
+    }
+
+    public void save() {
+        empDao.save();
+    }
+}
+```
+
+> step2: 配置bean，并开启自动装配
+
+
+
 
 ## bean 的实例化配置
 
