@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://www.example.com/custom"
+            elementFormDefault="qualified">
+
+    <xsd:element name="custom-element">
+        <xsd:complexType>
+            <xsd:attribute name="id" type="xsd:string" use="required"/>
+            <xsd:attribute name="name" type="xsd:string" use="required"/>
+            <xsd:attribute name="tag" type="xsd:string" use="optional"/>
+        </xsd:complexType>
+    </xsd:element>
+
+</xsd:schema>

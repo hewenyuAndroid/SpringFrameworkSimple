@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:custom="http://www.example.com/custom"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.example.com/custom http://www.example.com/custom/custom-namespace.xsd
+        ">
+
+    <custom:custom-element id="001" name="zhangsan" tag="hhha"/>
+    <custom:custom-element id="002" name="lisi"/>
+
+</beans>

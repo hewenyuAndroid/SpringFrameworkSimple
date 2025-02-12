@@ -1,0 +1,2 @@
+# ?? spring ? applicationContext.xml ????? http\://www.example.com/custom/custom-namespace.xsd ??? xsd ????
+http\://www.example.com/custom/custom-namespace.xsd=custom-namespace.xsd

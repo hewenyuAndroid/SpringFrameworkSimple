@@ -1,0 +1,2 @@
+# ?? spring ? applicationContext.xml ????? http\://www.example.com/custom ??????? handler ?
+http\://www.example.com/custom=com.example.handler.CustomNamespaceHandler
