@@ -10,4 +10,35 @@
     <custom:custom-element id="001" name="zhangsan" tag="hhha"/>
     <custom:custom-element id="002" name="lisi"/>
 
+    <!-- spring 整合 mybatis -->
+
+    <!-- step1: 配置数据源 -->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="url" value="jdbc:mysql://localhost:3306/ssm?serverTimezone=UTC"/>
+        <property name="username" value="root"/>
+        <property name="password" value="123456"/>
+    </bean>
+
+    <!-- step2: 配置 SqlSessionFactoryBean -->
+    <bean class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 配置mapper映射文件目录 -->
+        <property name="mapperLocations" value="classpath:com/example/mapper/*.xml"/>
+        <!-- 配置别名 -->
+        <!-- <property name="typeAliases" value="com.example.pojo.Emp"/> -->
+        <!-- 批量配置别名 -->
+        <property name="typeAliasesPackage" value="com.example.pojo"/>
+        <!-- 配置支持驼峰命名映射 -->
+        <property name="configuration">
+            <bean class="org.apache.ibatis.session.Configuration">
+                <property name="mapUnderscoreToCamelCase" value="true"/>
+            </bean>
+        </property>
+    </bean>
+
+    <!-- step3: 配置 Mapper 扫描包 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.example.mapper"/>
+    </bean>
+
 </beans>
