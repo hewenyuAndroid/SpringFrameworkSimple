@@ -615,3 +615,134 @@ public class ApplicationContextConfig { }
 ```
 
 
+# 使用注解的方式整合 mybatis
+
+> step1: 导入整合 mybatis 的相关坐标
+
+```xml
+<dependency>
+    <groupId>org.mybatis</groupId>
+    <artifactId>mybatis</artifactId>
+    <version>3.5.9</version>
+</dependency>
+
+<dependency>
+    <groupId>org.mybatis</groupId>
+    <artifactId>mybatis-spring</artifactId>
+    <version>2.0.7</version>
+</dependency>
+
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-jdbc</artifactId>
+    <version>5.3.23</version>
+</dependency>
+
+<dependency>
+    <groupId>com.mysql</groupId>
+    <artifactId>mysql-connector-j</artifactId>
+    <version>8.0.31</version>
+</dependency>
+
+<dependency>
+    <groupId>com.alibaba</groupId>
+    <artifactId>druid</artifactId>
+    <version>1.2.6</version>
+</dependency>
+```
+
+> step2: 创建数据映射对象
+
+```java
+public class Emp {
+    ...
+}
+```
+
+> step3: 创建 mapper 接口
+
+```java
+public interface EmpMapper {
+    /** 根据 empId 查询用户 */
+    Emp queryEmpById(@Param("empId") Integer empId);
+}
+```
+
+> step4: 创建 mapper 映射文件
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.mapper.EmpMapper">
+
+    <!--  Emp queryEmpById(@Param("empId") Integer empId); -->
+    <select id="queryEmpById" resultType="Emp">
+        select * from t_emp where emp_id = #{empId}
+    </select>
+
+</mapper>
+```
+
+> step5: 创建 `SqlSessionFactoryBean` // 从这里开始有差异
+
+// MyBatisConfig.java
+```java
+@Component
+public class MyBatisConfig {
+
+    @Bean
+    public DataSource dataSource(
+            @Value("${jdbc.driver}") String driver,
+            @Value("${jdbc.url}") String url,
+            @Value("${jdbc.username}") String username,
+            @Value("${jdbc.password}") String password
+    ) {
+        DruidDataSource dataSource = new DruidDataSource();
+//        dataSource.setDriverClassName(driver);
+        dataSource.setUrl(url);
+        dataSource.setUsername(username);
+        dataSource.setPassword(password);
+        return dataSource;
+    }
+
+    @Bean
+    public SqlSessionFactoryBean sqlSessionFactoryBean(DataSource dataSource) {
+        SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
+        // 设置数据源
+        sqlSessionFactoryBean.setDataSource(dataSource);
+        // 配置别名
+        sqlSessionFactoryBean.setTypeAliasesPackage("com.example.pojo");
+        // 配置驼峰命名映射
+        Configuration configuration = new Configuration();
+        configuration.setMapUnderscoreToCamelCase(true);
+        sqlSessionFactoryBean.setConfiguration(configuration);
+        return sqlSessionFactoryBean;
+    }
+}
+```
+
+> step6: 使用 `@MapperScan` 注解配置需要扫描的 mapper 接口包
+
+```java
+@Configuration
+@ComponentScan("com.example")
+@PropertySource("classpath:jdbc.properties")
+// 配置需要扫描的mapper接口目录
+@MapperScan("com.example.mapper")
+public class SpringConfig {
+
+}
+```
+
+> step7: 编写自测用例
+
+```java
+ApplicationContext context = new AnnotationConfigApplicationContext(SpringConfig.class);
+EmpMapper mapper = context.getBean(EmpMapper.class);
+Emp emp = mapper.queryEmpById(1);
+System.out.println("ApplicationAnnotationMyBatisCaseTest: testMyBatisCase(), emp=" + emp);
+```
+
