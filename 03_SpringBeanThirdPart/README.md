@@ -240,4 +240,14 @@ System.out.println("SpringMyBatisCaseTest: testSpringMyBatisCase(), emp=" + emp)
 - `ClassPathMapperScanner`: `definition.setAutowireMode(2)` 修改了自动注入状态，因此 `MapperFactoryBean` 中的 `setSqlSessionFactory` 会自动注入进去;
 
 
+# 自定义命名空间
+
+spring 自定义命名空间流程:
+
+1. 确定命名空间名称、`schema`虚拟路径、标签名称;
+2. 编写 `schema` 约束文件 `*.xsd`  `XML schema Definition` ( 例如 `custom-namespace.xsd` );
+3. 在类加载路径下创建 `META` 目录，创建约束映射文件 `spring.schemas` 和处理器映射文件 `spring.handlers`;
+4. 创建命名空间处理器 ( 例如 `CustomNamespaceHandler` )，实现 `NamespaceHanlder` 接口 或 集成其子类，在 `init()` 函数中注册解析器;
+4. 创建标签解析器 ( 例如 `CustomElementBeanDefinitionParser` )，实现 `BeanDefinitionParser` 接口 或 继承其子类，重写 `doParser` 函数解析标签属性;
+
 
