@@ -2,6 +2,7 @@ package com.example.test;
 
 import com.example.cal.Calculator;
 import com.example.cal.impl.CalculatorImpl;
+import com.example.cal.proxy.ProxyFactory;
 import org.junit.Test;
 
 import java.lang.reflect.InvocationHandler;
@@ -39,6 +40,23 @@ public class CalculatorCaseTest {
         calculatorProxy.add(1, 2);
         calculatorProxy.subtract(3, 1);
 
+    }
+
+    @Test
+    public void testProxyLogEnclose() {
+        // 创建目标对象
+        Calculator calculator = new CalculatorImpl();
+        // 创建代理对象
+        Calculator calculatorProxy = ProxyFactory.createProxy(calculator);
+        // 正常执行加法
+        calculatorProxy.add(3, 4);
+
+        try {
+            // 异常执行除法
+            calculatorProxy.divide(2, 0);
+        } catch (Exception e) {
+
+        }
     }
 
 }
