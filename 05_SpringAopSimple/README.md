@@ -1,9 +1,9 @@
-
 spring aop
 
 # spring aop
 
-`AOP`( `Aspect Oriented Programming` )，面向切面编程，是对面向对象编程 (`OOP`) 的升华。`OOP` 是纵向对一个事务的抽象，一个对象包含静态的属性信息以及动态的方法信息等。`AOP` 则是横向的对不同事物的抽象，属性与属性，方法与方法，对象与对象都可以组成一个切面。
+`AOP`( `Aspect Oriented Programming` )，面向切面编程，是对面向对象编程 (`OOP`) 的升华。`OOP`
+是纵向对一个事务的抽象，一个对象包含静态的属性信息以及动态的方法信息等。`AOP` 则是横向的对不同事物的抽象，属性与属性，方法与方法，对象与对象都可以组成一个切面。
 
 `AOP` 思想通过 动态代理技术，在运行期间，对目标对象的方法进行增强，代理对象同名方法内可以执行原有逻辑的同时嵌入执行其它增强逻辑或其它对象的方法。
 
@@ -36,15 +36,15 @@ aop 中的通知包含如下类型
 > 各种通知执行的顺序
 
 - spring 版本 `5.3.x` 以前:
-  1. 前置通知
-  2. 目标操作
-  3. 后置通知
-  4. 返回通知或异常通知
+    1. 前置通知
+    2. 目标操作
+    3. 后置通知
+    4. 返回通知或异常通知
 - spring 版本 `5.3.x` 以后:
-  1. 前置通知
-  2. 目标操作
-  3. 返回通知或异常通知
-  4. 后置通知
+    1. 前置通知
+    2. 目标操作
+    3. 返回通知或异常通知
+    4. 后置通知
 
 ```java
 public int add(int a, int b) {
@@ -53,10 +53,10 @@ public int add(int a, int b) {
         System.out.println("前置通知");
         result = a + b;
         System.out.println("返回通知");
-    }catch (Exception e){
+    } catch (Exception e) {
         e.printStackTrace();
         System.out.println("异常通知");
-    }finally {
+    } finally {
         System.out.println("后置通知");
     }
     return result;
@@ -84,7 +84,7 @@ execution([访问修饰符] 返回值类型 包名.类名.方法名(参数))
 package com.example.service.impl;
 
 public class UserServiceImpl {
-    
+
     public void login(String username, String password) {
         // do nothing
     }
@@ -111,9 +111,7 @@ execution(public void com.example.service.impl.UserServiceImpl.*(..))
 |-----------------------|----------------------------------------------------|
 | `JoinPoint`           | 连接点对象，任何通知都可以使用，可以获得当前目标对象、目标方法参数等信息。              |
 | `ProceedingJoinPoint` | `JoinPoint` 子类对象，主要是在环绕通知中执行 `proceed()`，进而执行目标方法。 |
-| `Throwable`            | 异常对象，在使用异常通知中，需要在配置文件中指出异常对象名称。                    |
-
-
+| `Throwable`           | 异常对象，在使用异常通知中，需要在配置文件中指出异常对象名称。                    |
 
 # 基于 xml 配置文件的aop
 
@@ -172,6 +170,7 @@ public class LoggerAspect {
 > step3: 配置切点表达式
 
 // applicationContext.xml
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -182,31 +181,31 @@ public class LoggerAspect {
             http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
         ">
 
-  <!--
-      需要导入aop的命名空间 xmlns:aop="http://www.springframework.org/schema/aop"
-  -->
+    <!--
+        需要导入aop的命名空间 xmlns:aop="http://www.springframework.org/schema/aop"
+    -->
 
-  <!-- 配置目标类 -->
-  <bean id="userService" class="com.example.service.impl.UserServiceImpl"/>
-  <!-- 配置切面类 -->
-  <bean id="loggerAspect" class="com.example.aspect.LoggerAspect"/>
+    <!-- 配置目标类 -->
+    <bean id="userService" class="com.example.service.impl.UserServiceImpl"/>
+    <!-- 配置切面类 -->
+    <bean id="loggerAspect" class="com.example.aspect.LoggerAspect"/>
 
-  <!-- aop配置 -->
-  <aop:config>
-    <!-- 配置通用的切点表达式，声明哪些方法需要被增强 -->
-    <aop:pointcut id="userServiceLoginPointCut"
-                  expression="execution(public void com.example.service.impl.UserServiceImpl.login(String, String))"/>
-    <!-- 配置织入，目的是组合切点和通知 -->
-    <aop:aspect ref="loggerAspect">
-      <!-- 配置前置通知 -->
-      <aop:before method="beforeAdvice"
-                  pointcut="execution(public void com.example.service.impl.UserServiceImpl.login(String, String))"/>
-      <!-- 配置返回通知 -->
-      <aop:after-returning method="afterReturningAdvice" pointcut-ref="userServiceLoginPointCut"/>
-      <!-- 配置后置通知 -->
-      <aop:after method="afterAdvice" pointcut-ref="userServiceLoginPointCut"/>
-    </aop:aspect>
-  </aop:config>
+    <!-- aop配置 -->
+    <aop:config>
+        <!-- 配置通用的切点表达式，声明哪些方法需要被增强 -->
+        <aop:pointcut id="userServiceLoginPointCut"
+                      expression="execution(public void com.example.service.impl.UserServiceImpl.login(String, String))"/>
+        <!-- 配置织入，目的是组合切点和通知 -->
+        <aop:aspect ref="loggerAspect">
+            <!-- 配置前置通知 -->
+            <aop:before method="beforeAdvice"
+                        pointcut="execution(public void com.example.service.impl.UserServiceImpl.login(String, String))"/>
+            <!-- 配置返回通知 -->
+            <aop:after-returning method="afterReturningAdvice" pointcut-ref="userServiceLoginPointCut"/>
+            <!-- 配置后置通知 -->
+            <aop:after method="afterAdvice" pointcut-ref="userServiceLoginPointCut"/>
+        </aop:aspect>
+    </aop:config>
 
 </beans>
 ```
@@ -217,7 +216,9 @@ public class LoggerAspect {
 ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
 // 使用被代理对象的接口类型获取代理对象
 UserService userServiceProxy = context.getBean(UserService.class);
-userServiceProxy.login("zhangsan", "123");
+userServiceProxy.
+
+login("zhangsan","123");
 
 // 输出:
 /*
@@ -228,7 +229,6 @@ LogAdvice: afterAdvice()
 */
 ```
 
-
 # 基于注解配置的aop
 
 AOP 的底层原理
@@ -237,7 +237,7 @@ AOP 的底层原理
 2. 代理对象中保存了切面类里面所有通知方法构成的增强器链;
 3. 目标方法执行时，会先去执行增强器链中需要执行的通知方法;
 
-AOP中方法的执行顺序: 
+AOP中方法的执行顺序:
 
 `前置通知 -> 目标方法 -> 返回通知/异常通知 -> 后置通知` ;
 
@@ -246,15 +246,16 @@ AOP中方法的执行顺序:
 `JoinPoint` 连接点对象，包装了当前目标方法的所有信息;
 
 ```java
+
 @Before("execution(int *(int, int))")
 public void excBefore(JoinPoint joinPoint) {
-  // 获取方法签名
-  Signature signature = joinPoint.getSignature();
-  // 获取目标方法名称
-  String methodName = signature.getName();
-  // 获取目标方法参数
-  Object[] args = joinPoint.getArgs();
-  System.out.println("LogAspect: excBefore(), methodName=" + methodName + ", args=" + Arrays.toString(args));
+    // 获取方法签名
+    Signature signature = joinPoint.getSignature();
+    // 获取目标方法名称
+    String methodName = signature.getName();
+    // 获取目标方法参数
+    Object[] args = joinPoint.getArgs();
+    System.out.println("LogAspect: excBefore(), methodName=" + methodName + ", args=" + Arrays.toString(args));
 }
 ```
 
@@ -323,6 +324,69 @@ public void excBefore(JoinPoint joinPoint) {
 }
 ```
 
+## `@Around` 环绕通知
+
+```java
+/**
+ * 环绕通知
+ *
+ * @param joinPoint 连接点对象
+ * @return result
+ */
+@Around(value = "com.example.cal.aspect.LogAspect.pointCut()")
+public Object aroundAdvice(ProceedingJoinPoint joinPoint) {
+    // 获取方法签名
+    MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+    // 获取方法名称
+    String methodName = signature.getName();
+    // 获取方法参数
+    Object[] args = joinPoint.getArgs();
+    // 定义方法返回值
+    Object result = null;
+    try {
+        System.out.println("AuthAspect: aroundAdvice() before, methodName=" + methodName + ", args=" + Arrays.toString(args));
+        // 执行目标方法
+        result = joinPoint.proceed();
+        System.out.println("AuthAspect: aroundAdvice() afterReturning, methodName=" + methodName + ", result=" + result);
+    } catch (Throwable e) {
+        System.out.println("AuthAspect: aroundAdvice() afterThrowing, methodName=" + methodName + ", exception=" + e);
+        e.printStackTrace();
+    } finally {
+        System.out.println("AuthAspect: aroundAdvice() after, methodName=" + methodName);
+    }
+    return result;
+}
+```
+
+## 多切面执行顺
+
+spring aop 配置多个切面时，可以使用 `@Order` 指定切面执行顺序，`@Order(1)` 中配置的至越小，切面优先执行;
+
+1. 配置 `AuthAspect` 切面的优先级为1 `@Order(1)`;
+2. `LogAspect` 切面的优先级为默认值 `Integer.MAX_VALUE`;
+
+得到输出如下:
+
+```text
+// 认证的前置通知
+AuthAspect: aroundAdvice() before, methodName=add, args=[1, 2]
+// 日志的前置通知
+LogAspect: excBefore(), methodName=add, args=[1, 2]
+// 目标方法
+CalculatorImpl: add(), result=3
+// 日志的返回通知
+LogAspect: excReturn(), methodName=add, args=[1, 2], result=3
+// 日志的后置通知
+LogAspect: excEnd()
+// 认证的返回通知
+AuthAspect: aroundAdvice() afterReturning, methodName=add, result=3
+// 认证的后置通知
+AuthAspect: aroundAdvice() after, methodName=add
+```
+
+多切面执行顺序逻辑参考下图
+
+![多切面执行逻辑](./imgs/spring-aop-multi-aspect-order.png)
 
 ## spring aop 注解方式使用步骤
 
@@ -407,10 +471,10 @@ public class LogAspect {
 ```java
 ApplicationContext context = new ClassPathXmlApplicationContext("aopApplicationContext.xml");
 Calculator bean = context.getBean(Calculator.class);
-bean.add(1, 2);
+bean.
+
+add(1,2);
 ```
-
-
 
 # 基于AOP的声明式事务控制
 

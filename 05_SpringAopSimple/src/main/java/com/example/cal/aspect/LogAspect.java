@@ -45,7 +45,7 @@ public class LogAspect {
      * 抽取切入点表达式
      */
     @Pointcut("execution(int *(int, int))")
-    public void pointCut() {
+    public static void pointCut() {
         // do nothing
     }
 
