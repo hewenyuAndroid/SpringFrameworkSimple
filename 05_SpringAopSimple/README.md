@@ -231,6 +231,185 @@ LogAdvice: afterAdvice()
 
 # 基于注解配置的aop
 
+AOP 的底层原理
+
+1. Spring 会为每个被切面切入的组件创建代理对象 ( Spring CGLIB 创建的代理对象，无需接口实现要求 );
+2. 代理对象中保存了切面类里面所有通知方法构成的增强器链;
+3. 目标方法执行时，会先去执行增强器链中需要执行的通知方法;
+
+AOP中方法的执行顺序: 
+
+`前置通知 -> 目标方法 -> 返回通知/异常通知 -> 后置通知` ;
+
+## `JoinPoint` 连接点，获取目标方法信息
+
+`JoinPoint` 连接点对象，包装了当前目标方法的所有信息;
+
+```java
+@Before("execution(int *(int, int))")
+public void excBefore(JoinPoint joinPoint) {
+  // 获取方法签名
+  Signature signature = joinPoint.getSignature();
+  // 获取目标方法名称
+  String methodName = signature.getName();
+  // 获取目标方法参数
+  Object[] args = joinPoint.getArgs();
+  System.out.println("LogAspect: excBefore(), methodName=" + methodName + ", args=" + Arrays.toString(args));
+}
+```
+
+## `@AfterReturning` 返回通知获取目标方法返回值
+
+```java
+/**
+ * 返回通知
+ *
+ * @param joinPoint 连接点对象
+ * @param result    配置返回值的参数名称
+ */
+@AfterReturning(value = "execution(int *(int, int))", returning = "result")
+public void excReturn(JoinPoint joinPoint, Object result) {
+    // 获取目标方法签名
+    MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+    // 获取方法名称
+    String methodName = signature.getName();
+    // 获取方法参数
+    Object[] args = joinPoint.getArgs();
+    System.out.println("LogAspect: excReturn(), methodName=" + methodName + ", args=" + Arrays.toString(args) + ", result=" + result);
+}
+```
+
+## `@AfterThrowing` 异常通知获取异常信息
+
+```java
+/**
+ * 异常通知
+ *
+ * @param joinPoint 连接点对象
+ * @param tx        配置异常通知获取异常信息
+ */
+@AfterThrowing(value = "execution(int *(int, int))", throwing = "tx")
+public void excException(JoinPoint joinPoint, Throwable tx) {
+    // 获取目标方法签名
+    MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+    // 获取方法名称
+    String methodName = signature.getName();
+    // 获取方法参数
+    Object[] args = joinPoint.getArgs();
+    System.out.println("LogAspect: excException(), methodName=" + methodName + ", args=" + Arrays.toString(args) + ", exception=" + tx);
+}
+```
+
+## 切入点表达式抽取
+
+```java
+/**
+ * 抽取切入点表达式
+ */
+@Pointcut("execution(int *(int, int))")
+public void pointCut() {
+    // do nothing
+}
+
+@Before("pointCut()")   // 使用切入点表达式
+public void excBefore(JoinPoint joinPoint) {
+    // 获取方法签名
+    Signature signature = joinPoint.getSignature();
+    // 获取目标方法名称
+    String methodName = signature.getName();
+    // 获取目标方法参数
+    Object[] args = joinPoint.getArgs();
+    System.out.println("LogAspect: excBefore(), methodName=" + methodName + ", args=" + Arrays.toString(args));
+}
+```
+
+
+## spring aop 注解方式使用步骤
+
+1. 导入 `AOP` 依赖
+2. 编写切面 `Aspect`
+3. 编写通知方法
+4. 指定切入点表达式
+5. 测试 `AOP` 动态织入
+
+> step1: 导入 aop 坐标
+
+```xml
+<!-- 导入 aop 相关坐标 -->
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-aspects</artifactId>
+    <version>5.3.24</version>
+</dependency>
+```
+
+> step2，step3，step4: 编写切面 `Aspect`，编写通知方法，指定切入点表达式
+
+```java
+/**
+ * @Component 首先这个类要受spring 管理
+ * @Aspect 注解告诉 spring 这个组件是个切面，注意：需要在 applicationContext.xml 配置文件中开启aop支持
+ */
+@Aspect
+@Component
+public class LogAspect {
+
+    /*
+        需要告诉 spring 以下通知何时何地运行？
+
+        何时?
+            @Before: 目标方法执行之前运行
+            @AfterReturning: 目标方法正常执行结束返回结果时运行 (可以理解为try代码块的最后一行)
+            @AfterThrowing: 目标方法抛出异常时运行 (可以理解为 catch 代码块里面执行)
+            @After: 目标方法最终返回时运行 (可以理解为 finally 代码块)
+
+        何地?
+            切入点表达式: execution( 方法的全签名 )
+                - 全签名完整写法:
+                    public int com.example.cal.Calculator.add(int, int) throws Exception
+                - 全签名省略写法: [] 中的内容可以省略
+                    [public] int [com.example.cal.Calculator].add(int, int) [throws Exception]
+                    int add(int, int)
+                - 通配符
+                    - *: 表示任意字符
+                    - (..) 动态参数列表
+
+        何时何地?
+            @Before("execution(int add(int, int))")
+
+     */
+
+    @Before("execution(int *(int, int))")
+    public void excBefore() {
+        System.out.println("LogAspect: excBefore()");
+    }
+
+    @AfterReturning("execution(int *(int, int))")
+    public void excReturn() {
+        System.out.println("LogAspect: excReturn()");
+    }
+
+    @AfterThrowing("execution(int *(int, int))")
+    public void excException() {
+        System.out.println("LogAspect: excException()");
+    }
+
+    @After("execution(int *(int, int))")
+    public void excEnd() {
+        System.out.println("LogAspect: excEnd()");
+    }
+
+}
+```
+
+> step5: 测试
+
+```java
+ApplicationContext context = new ClassPathXmlApplicationContext("aopApplicationContext.xml");
+Calculator bean = context.getBean(Calculator.class);
+bean.add(1, 2);
+```
+
 
 
 # 基于AOP的声明式事务控制

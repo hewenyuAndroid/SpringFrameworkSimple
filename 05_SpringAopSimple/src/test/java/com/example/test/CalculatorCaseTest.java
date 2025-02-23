@@ -4,6 +4,8 @@ import com.example.cal.Calculator;
 import com.example.cal.impl.CalculatorImpl;
 import com.example.cal.proxy.ProxyFactory;
 import org.junit.Test;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -56,6 +58,24 @@ public class CalculatorCaseTest {
             calculatorProxy.divide(2, 0);
         } catch (Exception e) {
 
+        }
+    }
+
+    @Test
+    public void testProxyAop() {
+        ApplicationContext context = new ClassPathXmlApplicationContext("aopApplicationContext.xml");
+        Calculator bean = context.getBean(Calculator.class);
+        bean.add(1, 2);
+    }
+
+    @Test
+    public void testProxyAopFail() {
+        ApplicationContext context = new ClassPathXmlApplicationContext("aopApplicationContext.xml");
+        Calculator bean = context.getBean(Calculator.class);
+        try {
+            bean.divide(1, 0);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

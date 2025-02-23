@@ -1,7 +1,9 @@
 package com.example.cal.impl;
 
 import com.example.cal.Calculator;
+import org.springframework.stereotype.Component;
 
+@Component
 public class CalculatorImpl implements Calculator {
 
     @Override
