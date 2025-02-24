@@ -47,4 +47,12 @@ class BookDaoCaseTest {
         System.out.println("BookDaoCaseTest: testUpdateBook(), end.");
     }
 
+    @Test
+    public void testUpdateDelete() {
+        System.out.println("BookDaoCaseTest: testUpdateDelete(), begin.");
+        int result = bookDao.deleteBookById(4);
+        System.out.println("update row = " + result);
+        System.out.println("BookDaoCaseTest: testUpdateDelete(), end.");
+    }
+
 }

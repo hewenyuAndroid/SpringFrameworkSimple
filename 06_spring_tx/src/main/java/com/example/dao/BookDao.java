@@ -65,5 +65,21 @@ public class BookDao {
         return result;
     }
 
+    /**
+     * 根据id删除图书
+     *
+     * @param id 图书id
+     * @return 影响的行数
+     */
+    public int deleteBookById(Integer id) {
+        // 1. 创建 sql
+        String sql = "delete from book where id = ?";
+
+        // 2. 执行删除语句
+        int result = jdbcTemplate.update(sql, id);
+
+        return result;
+    }
+
 
 }
