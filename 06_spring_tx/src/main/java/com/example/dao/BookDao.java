@@ -28,4 +28,22 @@ public class BookDao {
         return book;
     }
 
+    /**
+     * 插入图书
+     *
+     * @param book 新增的图书
+     * @return 更新的行数
+     */
+    public int insert(Book book) {
+
+        // 1. 创建 sql
+        String sql = "insert into book(bookName, price, stock) values(?,?,?)";
+
+        // 执行插入
+        int result = jdbcTemplate.update(sql, book.getBookName(), book.getPrice(), book.getStock());
+
+        return result;
+    }
+
+
 }
