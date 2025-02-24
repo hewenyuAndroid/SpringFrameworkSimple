@@ -34,4 +34,17 @@ class BookDaoCaseTest {
         System.out.println("BookDaoCaseTest: testInsertBook(), end.");
     }
 
+    @Test
+    public void testUpdateBook() {
+        System.out.println("BookDaoCaseTest: testUpdateBook(), begin.");
+        Book book = new Book();
+        book.setId(4);
+        book.setBookName("Kotlin实战");
+        book.setPrice(new BigDecimal("88.88"));
+        book.setStock(21);
+        int result = bookDao.updateBookById(book);
+        System.out.println("update row = " + result);
+        System.out.println("BookDaoCaseTest: testUpdateBook(), end.");
+    }
+
 }

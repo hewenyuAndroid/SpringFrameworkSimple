@@ -45,5 +45,25 @@ public class BookDao {
         return result;
     }
 
+    /**
+     * 根据id更新图书数据
+     *
+     * @param book 目标更新的图书信息
+     * @return 影响的行数
+     */
+    public int updateBookById(Book book) {
+        if (!book.isUpdateDataValid()) {
+            System.out.println("BookDao: updateBookById(), invalid book info.");
+            return 0;
+        }
+        // 1. 创建 sql
+        String sql = "update book set bookName = ?, price = ?, stock = ? where id = ?";
+
+        // 2. 执行更新语句
+        int result = jdbcTemplate.update(sql, book.getBookName(), book.getPrice(), book.getStock(), book.getId());
+
+        return result;
+    }
+
 
 }

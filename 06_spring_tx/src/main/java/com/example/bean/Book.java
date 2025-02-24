@@ -12,4 +12,8 @@ public class Book {
     private BigDecimal price;
     private Integer stock;
 
+    public boolean isUpdateDataValid() {
+        return bookName != null && price != null && stock != null && id != null;
+    }
+
 }
