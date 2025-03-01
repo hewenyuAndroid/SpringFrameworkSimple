@@ -1,6 +1,8 @@
 package com.example.springmvc_helloworld.pojo;
 
+import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 /**
  * 接收级联的数据
@@ -13,6 +15,7 @@ import lombok.Data;
  * &agreement=on
  */
 @Data
+@Accessors(chain = true)
 public class PersonVO2 {
 
     private String username;
