@@ -9,9 +9,29 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin    // 允许跨域访问
 @Controller
 @ResponseBody
 public class EmpRestController {
+
+    /**
+     * CORS policy: 同源策略
+     * 跨源资源共享 ( CORS ) Cross-Origin Resource Sharing
+     *      浏览器为了安全，默认会遵循同源策略，( 请求要去的服务器和当前项目所在的服务器必须是同一个源 [ 同一个服务器 ] )，如果不是，请求就会被拦截
+     *
+     *      复杂的跨域请求会发送两次:
+     *          1. options 请求: 预检请求，浏览器会先发送 options 请求，询问服务器是否允许当前域名进行跨域访问;
+     *          2. 真正的请求: POST，GET,DELETE等;
+     *
+     * 浏览器页面所在的地址: http://localhost/emp/base
+     * 页面上要发的请求地址: http://localhost:8080/emp
+     * / 之前的内容需要完全一致，浏览器才能把请求发送出去 ( http://localhost 和 http://localhost:8080 需要保持一致)
+     *
+     * 跨域问题解决:
+     *      1. 前端解决;
+     *      2. 后端解决，允许前端跨域即可;
+     *          原理: 服务器给浏览器的响应头中添加字段: Access-Control-Allow-Origin = *
+     */
 
     @Autowired
     private EmpService empService;
